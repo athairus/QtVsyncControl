@@ -32,12 +32,24 @@ Window {
     MouseArea {
         id: mouseArea;
         anchors.fill: parent;
+
+        hoverEnabled: true;
+
         onDoubleClicked: {
             if( window.visibility !== Window.FullScreen ) {
                 window.visibility = Window.FullScreen;
             } else {
                 window.visibility = Window.Windowed;
             }
+        }
+
+        Rectangle {
+            id: mouseTracker;
+            width: 20;
+            height: 20;
+            x: mouseArea.mouseX - ( width / 2 );
+            y: mouseArea.mouseY - ( height / 2 );
+            color: "green";
         }
     }
 

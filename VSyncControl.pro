@@ -42,9 +42,11 @@
     # Include libraries
     # INCLUDEPATH += /path/to/include
 
-    SOURCES += main.cpp
+    SOURCES += main.cpp \
+    customwindow.cpp
 
-    HEADERS +=
+    HEADERS += \
+    customwindow.h
 
     RESOURCES += qml.qrc
 

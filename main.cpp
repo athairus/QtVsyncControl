@@ -20,10 +20,26 @@
 // main.cpp: Entry point
 
 #include <QGuiApplication>
+#include <QQmlEngine>
 #include <QQmlApplicationEngine>
 
+#include <cstdlib>
+
+#include "customwindow.h"
+
 int main( int argc, char *argv[] ) {
+    // Generates a MASSSIVE amount of debugging info per frame
+    // putenv( ( char* )"QT_LOGGING_RULES=qt.scenegraph.renderloop=true" );
+
+    // This is the most direct way to set the render loop type
+    putenv( ( char* )"QSG_RENDER_LOOP=threaded" );
+
+    // Set the time to idle from the first update request until it is delivered (default 5ms)
+    // putenv( ( char* )"QT_QPA_UPDATE_IDLE_TIME=10" );
+
     QGuiApplication app( argc, argv );
+
+    qmlRegisterType<CustomWindow>( "custom.window", 1, 0, "CustomWindow" );
 
     QQmlApplicationEngine engine;
     engine.load( QUrl( QStringLiteral( "qrc:/main.qml" ) ) );

@@ -20,14 +20,104 @@
 // main.qml: Simple moving box demo to illustrate smooth motion/tearing depending on settings
 
 import QtQuick 2.5
-import QtQuick.Window 2.2
 import QtQuick.Controls 1.4
+import QtQuick.Window 2.2
 
-Window {
+import custom.window 1.0
+
+CustomWindow {
     id: window;
-    visible: true
-    width: 1920;
-    height: 1080;
+    width: Screen.width * 0.7;
+    height: Screen.height * 0.7;
+    x: Screen.width / 2 - width / 2;
+    y: Screen.height / 2 - height / 2;
+    visible: true;
+    vsync: false;
+
+    onWidthChanged: {
+        leftAnimation.to = window.width - rectangle1.width;
+        animation.restart();
+    }
+
+    color: "#202020";
+
+    Column {
+        anchors.top: parent.top;
+        anchors.topMargin: 20;
+        anchors.horizontalCenter: parent.horizontalCenter;
+        spacing: 20;
+        z: 1;
+
+        property int textSize: 14;
+        property color textColor: "white";
+
+        Label {
+            id: directions;
+            anchors.horizontalCenter: parent.horizontalCenter;
+            font.pixelSize: parent.textSize;
+            color: parent.textColor;
+            text: "Double-click to enter fullscreen, click button to toggle VSync";
+        }
+
+        Label {
+            id: windowInfo;
+            anchors.horizontalCenter: parent.horizontalCenter;
+            font.pixelSize: parent.textSize;
+            color: parent.textColor;
+            text: window.visibility === Window.FullScreen ? "Fullscreen: Compositor off, app draws directly to screen (Windows: VSync toggleable, OS X: No difference)" :
+                                                            "Windowed: Compositor controls when app contents appear on screen (Windows: VSync forced on, OS X: No difference)";
+        }
+
+        Label {
+            id: bufferingInfo;
+            anchors.horizontalCenter: parent.horizontalCenter;
+            font.pixelSize: parent.textSize;
+            color: parent.textColor;
+            text: "Buffering mode: " + ( doubleBuffered ?
+                                         "Double buffering" :
+                                         "Single buffering" );
+        }
+
+        Label {
+            id: vsyncInfo;
+            anchors.horizontalCenter: parent.horizontalCenter;
+            font.pixelSize: parent.textSize;
+            color: parent.textColor;
+            text: window.vsync ? "VSync on (swap interval = 1, block on swapBuffers() until 1 vblank occurs)" :
+                                 "VSync off (swap interval = 0, swapBuffers() does not block)";
+        }
+
+        Button {
+            id: vsyncToggle;
+            anchors.horizontalCenter: parent.horizontalCenter;
+            text: "Toggle VSync";
+            onClicked: {
+                if( window.vsync ) window.vsync = false;
+                else window.vsync = true;
+            }
+        }
+    }
+
+    // Simple rectangle that moves from side to side
+    Rectangle {
+        id: rectangle1;
+        anchors.verticalCenter: parent.verticalCenter;
+        x: 0;
+        width: 400;
+        height: 400;
+        color: "#ff0000";
+
+        SequentialAnimation on x {
+            id: animation;
+            loops: Animation.Infinite;
+
+            // Reset the position if the animation was restarted partway through
+            ScriptAction { script: if( rectangle1.x != 0 ) rectangle1.x = 0; }
+
+            PropertyAnimation { id: leftAnimation; to: window.width - rectangle1.width; duration: 2000; }
+            PropertyAnimation { id: rightAnimation; to: 0; duration: 2000; }
+        }
+    }
 
     MouseArea {
         id: mouseArea;
@@ -35,11 +125,14 @@ Window {
 
         hoverEnabled: true;
 
+        property int savedState;
+
         onDoubleClicked: {
             if( window.visibility !== Window.FullScreen ) {
+                savedState = window.visibility;
                 window.visibility = Window.FullScreen;
             } else {
-                window.visibility = Window.Windowed;
+                window.visibility = savedState;
             }
         }
 
@@ -50,50 +143,6 @@ Window {
             x: mouseArea.mouseX - ( width / 2 );
             y: mouseArea.mouseY - ( height / 2 );
             color: "green";
-        }
-    }
-
-    Column {
-        anchors.top: parent.top;
-        anchors.topMargin: 20;
-        anchors.horizontalCenter: parent.horizontalCenter;
-        spacing: 20;
-
-        Label {
-            id: directions;
-            anchors.horizontalCenter: parent.horizontalCenter;
-            font.pixelSize: 18;
-            text: "Double-click to enter fullscreen, click button to toggle VSync";
-        }
-
-        Label {
-            id: windowInfo;
-            anchors.horizontalCenter: parent.horizontalCenter;
-            font.pixelSize: 18;
-            text: window.visibility === Window.FullScreen ? "Fullscreen: App draws directly to screen" :
-                                                            "Windowed: Compositor controls when app contents appear on screen";
-        }
-
-        Label {
-            id: vsyncInfo;
-            anchors.horizontalCenter: parent.horizontalCenter;
-            font.pixelSize: 18;
-            text: "[VSync info placeholder]";
-        }
-    }
-
-    Rectangle {
-        id: rectangle1;
-        anchors.verticalCenter: parent.verticalCenter;
-        x: 0;
-        width: 500;
-        height: 500;
-        color: "#ff0000";
-
-        SequentialAnimation on x {
-            loops: Animation.Infinite;
-            PropertyAnimation { to: window.width - rectangle1.width; duration: 2000; }
-            PropertyAnimation { to: 0; duration: 2000; }
         }
     }
 }
